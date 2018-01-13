@@ -4,7 +4,6 @@ window.onload = function () {
     const apiKey = 'e732348669ce5455d2c70577462ce33b'
     let url = 'http://api.openweathermap.org/data/2.5/weather?q=' + enteredCityName + '&&appid=' + apiKey
     console.log(`url: ${url}`)
-    //document.getElementById("cityNameOutput").innerText = enteredCityName
     const promise = axios.get(url);
 
   promise.then(data => {
