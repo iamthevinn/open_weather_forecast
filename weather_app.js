@@ -1,49 +1,14 @@
 window.onload = function () {
 
-  function clearDisplay() {
-    document.getElementById("temperature").innerText = ""
-    document.getElementById("cityNameOutput").innerText = ""
-    document.body.style.backgroundColor = ""
-  }
-
   document.getElementById("toggle").addEventListener('change', setUnitText)
 
-  function setUnitText() {
-    if (!document.getElementById("toggle").checked) {
-      document.getElementById("unitOfTemperature").innerText = "Fahrenheit"
-      if (document.getElementById("temperature").innerText != "") {
-        let temperatureWithDeg = document.getElementById("temperature").innerText.substr(document.getElementById("temperature").innerText.indexOf(" ")+1);
-        console.log(temperatureWithDeg)
-        let tempInKelvin = temperatureWithDeg.substring(0,temperatureWithDeg.length-2)
-        console.log(tempInKelvin)
-        console.log(typeof tempInKelvin)
-        tempInKelvin = parseInt(tempInKelvin,10) + 273.15
-        console.log(tempInKelvin)
-        let roundedTemp = Math.round(tempInKelvin * 9/5 - 459.67)
-        document.getElementById("temperature").innerText = `Temperature: ${roundedTemp}°F`
-      }
-    }
-    else {
-      document.getElementById("unitOfTemperature").innerText = "Celsius"
-      if (document.getElementById("temperature").innerText != "") {
-        let temperatureWithDeg = document.getElementById("temperature").innerText.substr(document.getElementById("temperature").innerText.indexOf(" ")+1);
-        console.log(temperatureWithDeg)
-        let tempInKelvin = temperatureWithDeg.substring(0,temperatureWithDeg.length-2)
-        console.log(tempInKelvin)
-        console.log(typeof tempInKelvin)
-        tempInKelvin = (parseInt(tempInKelvin,10) + 459.67) * 5/9
-        console.log(tempInKelvin)
-        let roundedTemp = Math.round(tempInKelvin - 273.15)
-        document.getElementById("temperature").innerText = `Temperature: ${roundedTemp}°C`
-      }
-    }
-  }
 
   document.getElementById("button").addEventListener('click', () => {
     
     document.getElementById("errorText").innerText = "";
     let enteredCityName = document.getElementById("cityNameInput").value;
-    const apiKey = 'e732348669ce5455d2c70577462ce33b'
+    //const apiKey = 'e732348669ce5455d2c70577462ce33b'
+    const apiKey = localStorage.getItem("apiKey");
     let url = 'http://api.openweathermap.org/data/2.5/weather?q=' + enteredCityName + '&&appid=' + apiKey
     console.log(`url: ${url}`)
     const promise = axios.get(url);
@@ -52,10 +17,10 @@ window.onload = function () {
     console.log(data.data.main.temp)
     if (data.data.main.temp != undefined) {
       let tempInKelvin = data.data.main.temp;
-      let roundedTemp = Math.round(tempInKelvin * 9/5 - 459.67)
+      let temperature = convertTemperature(Math.round(tempInKelvin),"kelvin","fahrenheit")
       let unit = 'F'
       if (document.getElementById("toggle").checked) {
-        roundedTemp = Math.round(tempInKelvin - 273.15)
+        temperature = convertTemperature(Math.round(tempInKelvin),"kelvin","celcius")
         unit  = 'C'
       }
       let country = ""
@@ -63,20 +28,13 @@ window.onload = function () {
         country = `, ${data.data.sys.country}`
 
       document.getElementById("cityNameOutput").innerText = `${data.data.name}${country}`
-      document.getElementById("temperature").innerText = `Temperature: ${roundedTemp}°${unit}`
+      document.getElementById("temperature").innerText = `Temperature: ${temperature}°${unit}`
+
       console.log(data)
       console.log(data.data.weather[0].main)
+
       if (data.data.weather[0].main != undefined) {
-        let precip = data.data.weather[0].main
-        if (precip === "Clear") { // anchorage
-          document.body.style.backgroundColor = ""
-        } else if (precip === "Fog") { // spokane
-          document.body.style.backgroundColor = "#696969"
-        } else if (precip === "Clouds") { // new york
-          document.body.style.backgroundColor = "#A9A9A9"
-        } else if (precip === "Rain" ){ // pembroke
-          document.body.style.backgroundColor = "#6495ED"
-        }
+        updateBackgroundByPrecip(data.data.weather[0].main)
       }
       
     }
@@ -90,14 +48,86 @@ window.onload = function () {
 
   promise.catch(err => {
     console.log(enteredCityName)
+    clearDisplay()
     if (enteredCityName === "") {
       document.getElementById("errorText").innerText = `Enter a city name or ID in the text field.`
     } else {
       document.getElementById("errorText").innerText = `No city found by the name or ID: ${enteredCityName}`
     }
-
-    clearDisplay()
   })
 
   })
+
+  function clearDisplay() {
+    document.getElementById("temperature").innerText = "";
+    document.getElementById("cityNameOutput").innerText = "";
+    document.getElementById("errorText").innerText = "";
+    document.body.style.backgroundColor = "";
+  }
+
+  function convertTemperature(degrees, beforeUnit, afterUnit) {
+    
+    if (beforeUnit.toLowerCase() === "kelvin") {
+      if (afterUnit.toLowerCase() === "celcius" || afterUnit.toLowerCase() === "centigrade") {
+        return Math.round(degrees - 273.15).toFixed(0);
+      } else if (afterUnit.toLowerCase() === "fahrenheit") {
+        return Math.round(((degrees - 273.15) * 1.8) + 32).toFixed(0);
+      }
+    } else if (beforeUnit.toLowerCase() === "celcius" || beforeUnit.toLowerCase() === "centigrade") {
+      if (afterUnit.toLowerCase() === "kelvin") {
+        return Math.round(degrees + 273.15).toFixed(0);
+      } else if (afterUnit.toLowerCase() === "fahrenheit") {
+        return Math.round((degrees * 1.8) + 32).toFixed(0)
+      }
+    } else if (beforeUnit.toLowerCase() === "fahrenheit") {
+      if (afterUnit.toLowerCase() === "celcius" || afterUnit.toLowerCase() === "centigrade") {
+        return Math.round((degrees - 32) / 1.8).toFixed(0)
+      } else if (afterUnit.toLowerCase() === "kelvin") {
+        return Math.round(((degrees - 32) / 1.8) + 273.15).toFixed(0);
+      }
+    }
+    return degrees;
+  }
+
+  function setUnitText() {
+    if (!document.getElementById("toggle").checked) { // converting from celcius to fahrenheit
+      document.getElementById("unitOfTemperature").innerText = "Fahrenheit"
+    } else { // converting from fahrenheit to celcius
+      document.getElementById("unitOfTemperature").innerText = "Celcius"
+    }
+  
+    if (document.getElementById("temperature").innerText != "") {
+      let temperatureWithUnit = document.getElementById("temperature").innerText.substr(document.getElementById("temperature").innerText.indexOf(" ")+1);
+      let displayedUnit = temperatureWithUnit[temperatureWithUnit.length-1]
+      let convertedUnit = displayedUnit
+      let displayedTemperature = parseInt(temperatureWithUnit.substring(0,temperatureWithUnit.length-2))
+      let convertedTemperature = displayedTemperature;
+      
+      if (displayedUnit === 'C') {
+        convertedTemperature = convertTemperature(displayedTemperature,"celcius","fahrenheit")
+        convertedUnit = 'F'
+      } else if (displayedUnit === 'F') {
+        convertedTemperature = convertTemperature(displayedTemperature,"fahrenheit","celcius")
+        convertedUnit = 'C'
+      }
+      document.getElementById("temperature").innerText = `Temperature: ${convertedTemperature}°${convertedUnit}`
+    }
+
+  }
+
+  function updateBackgroundByPrecip(precip) {
+    if (precip === "Clear") { // anchorage
+      document.body.style.backgroundColor = ""
+    } else if (precip === "Fog") { // spokane
+      document.body.style.backgroundColor = "#696969"
+    } else if (precip === "Clouds") { // new york
+      document.body.style.backgroundColor = "#A9A9A9"
+    } else if (precip === "Rain" ){ // pembroke
+      document.body.style.backgroundColor = "#6495ED"
+    }
+  }
+
+  //myStorage = window.localStorage;
+  //localStorage.setItem('apiKey', 'e732348669ce5455d2c70577462ce33b');
+  //localStorage.removeItem('myCat')
 }
