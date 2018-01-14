@@ -4,7 +4,7 @@ window.onload = function () {
 
 
   document.getElementById("button").addEventListener('click', () => {
-    
+
     document.getElementById("errorText").innerText = "";
     let enteredCityName = document.getElementById("cityNameInput").value;
     //const apiKey = 'e732348669ce5455d2c70577462ce33b'
@@ -13,48 +13,47 @@ window.onload = function () {
     console.log(`url: ${url}`)
     const promise = axios.get(url);
 
-  promise.then(data => {
-    console.log(data.data.main.temp)
-    if (data.data.main.temp != undefined) {
-      let tempInKelvin = data.data.main.temp;
-      let temperature = convertTemperature(Math.round(tempInKelvin),"kelvin","fahrenheit")
-      let unit = 'F'
-      if (document.getElementById("toggle").checked) {
-        temperature = convertTemperature(Math.round(tempInKelvin),"kelvin","celcius")
-        unit  = 'C'
+    promise.then(data => {
+      console.log(data.data.main.temp)
+      if (data.data.main.temp != undefined) {
+        let tempInKelvin = data.data.main.temp;
+        let temperature = convertTemperature(Math.round(tempInKelvin), "kelvin", "fahrenheit")
+        let unit = 'F'
+        if (document.getElementById("toggle").checked) {
+          temperature = convertTemperature(Math.round(tempInKelvin), "kelvin", "celcius")
+          unit = 'C'
+        }
+        let country = ""
+        if (data.data.sys.country != "US")
+          country = `, ${data.data.sys.country}`
+
+        document.getElementById("cityNameOutput").innerText = `${data.data.name}${country}`
+        document.getElementById("temperature").innerText = `Temperature: ${temperature}°${unit}`
+
+        console.log(data)
+        console.log(data.data.weather[0].main)
+
+        if (data.data.weather[0].main != undefined) {
+          updateBackgroundByPrecip(data.data.weather[0].main)
+        }
+
+      } else
+        document.getElementById("temperature").innerText = "City found but no tempurature provided. Sorry."
+
+
+    }, () => {})
+
+
+
+    promise.catch(err => {
+      console.log(enteredCityName)
+      clearDisplay()
+      if (enteredCityName === "") {
+        document.getElementById("errorText").innerText = `Enter a city name or ID in the text field.`
+      } else {
+        document.getElementById("errorText").innerText = `No city found by the name or ID: ${enteredCityName}`
       }
-      let country = ""
-      if (data.data.sys.country != "US")
-        country = `, ${data.data.sys.country}`
-
-      document.getElementById("cityNameOutput").innerText = `${data.data.name}${country}`
-      document.getElementById("temperature").innerText = `Temperature: ${temperature}°${unit}`
-
-      console.log(data)
-      console.log(data.data.weather[0].main)
-
-      if (data.data.weather[0].main != undefined) {
-        updateBackgroundByPrecip(data.data.weather[0].main)
-      }
-      
-    }
-    else
-      document.getElementById("temperature").innerText = "City found but no tempurature provided. Sorry."
-
-      
-  }, () => { })
-
-
-
-  promise.catch(err => {
-    console.log(enteredCityName)
-    clearDisplay()
-    if (enteredCityName === "") {
-      document.getElementById("errorText").innerText = `Enter a city name or ID in the text field.`
-    } else {
-      document.getElementById("errorText").innerText = `No city found by the name or ID: ${enteredCityName}`
-    }
-  })
+    })
 
   })
 
@@ -66,7 +65,7 @@ window.onload = function () {
   }
 
   function convertTemperature(degrees, beforeUnit, afterUnit) {
-    
+
     if (beforeUnit.toLowerCase() === "kelvin") {
       if (afterUnit.toLowerCase() === "celcius" || afterUnit.toLowerCase() === "centigrade") {
         return Math.round(degrees - 273.15).toFixed(0);
@@ -95,19 +94,19 @@ window.onload = function () {
     } else { // converting from fahrenheit to celcius
       document.getElementById("unitOfTemperature").innerText = "Celcius"
     }
-  
+
     if (document.getElementById("temperature").innerText != "") {
-      let temperatureWithUnit = document.getElementById("temperature").innerText.substr(document.getElementById("temperature").innerText.indexOf(" ")+1);
-      let displayedUnit = temperatureWithUnit[temperatureWithUnit.length-1]
+      let temperatureWithUnit = document.getElementById("temperature").innerText.substr(document.getElementById("temperature").innerText.indexOf(" ") + 1);
+      let displayedUnit = temperatureWithUnit[temperatureWithUnit.length - 1]
       let convertedUnit = displayedUnit
-      let displayedTemperature = parseInt(temperatureWithUnit.substring(0,temperatureWithUnit.length-2))
+      let displayedTemperature = parseInt(temperatureWithUnit.substring(0, temperatureWithUnit.length - 2))
       let convertedTemperature = displayedTemperature;
-      
+
       if (displayedUnit === 'C') {
-        convertedTemperature = convertTemperature(displayedTemperature,"celcius","fahrenheit")
+        convertedTemperature = convertTemperature(displayedTemperature, "celcius", "fahrenheit")
         convertedUnit = 'F'
       } else if (displayedUnit === 'F') {
-        convertedTemperature = convertTemperature(displayedTemperature,"fahrenheit","celcius")
+        convertedTemperature = convertTemperature(displayedTemperature, "fahrenheit", "celcius")
         convertedUnit = 'C'
       }
       document.getElementById("temperature").innerText = `Temperature: ${convertedTemperature}°${convertedUnit}`
@@ -122,7 +121,7 @@ window.onload = function () {
       document.body.style.backgroundColor = "#696969"
     } else if (precip === "Clouds") { // new york
       document.body.style.backgroundColor = "#A9A9A9"
-    } else if (precip === "Rain" ){ // pembroke
+    } else if (precip === "Rain") { // pembroke
       document.body.style.backgroundColor = "#6495ED"
     }
   }
