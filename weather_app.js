@@ -1,9 +1,20 @@
 window.onload = function () {
-
+  //localStorage.removeItem('apiKey')
+  //localStorage.removeItem('lastSuccessfulLookup')
   document.getElementById("toggle").addEventListener('change', setUnitText)
 
+  let myStorage = window.localStorage;
+  if (localStorage.getItem('apiKey') != undefined) {
+    document.getElementById("cityNameInput").value = localStorage.getItem('lastSuccessfulLookup');
+    lookupCity()
+  } else {
+    localStorage.setItem('apiKey', 'e732348669ce5455d2c70577462ce33b');
+    document.getElementById("cityNameOutput").innerText = "First time user. Welcome. Enter a city to and press the button to get the temperature there."
+  }
 
-  document.getElementById("button").addEventListener('click', () => {
+  document.getElementById("button").addEventListener('click', lookupCity)
+
+  function lookupCity() {
 
     document.getElementById("errorText").innerText = "";
     let enteredCityName = document.getElementById("cityNameInput").value;
@@ -18,6 +29,9 @@ window.onload = function () {
       if (data.data.main.temp != undefined) {
         let tempInKelvin = data.data.main.temp;
         let temperature = convertTemperature(Math.round(tempInKelvin), "kelvin", "fahrenheit")
+        console.log("tempInKelvin Rounded: " + Math.round(tempInKelvin))
+        console.log("tempInKelvin: " + tempInKelvin)
+        console.log("temperature: " + temperature)
         let unit = 'F'
         if (document.getElementById("toggle").checked) {
           temperature = convertTemperature(Math.round(tempInKelvin), "kelvin", "celcius")
@@ -40,6 +54,7 @@ window.onload = function () {
       } else
         document.getElementById("temperature").innerText = "City found but no tempurature provided. Sorry."
 
+        localStorage.setItem('lastSuccessfulLookup',data.data.name)
 
     }, () => {})
 
@@ -52,10 +67,11 @@ window.onload = function () {
         document.getElementById("errorText").innerText = `Enter a city name or ID in the text field.`
       } else {
         document.getElementById("errorText").innerText = `No city found by the name or ID: ${enteredCityName}`
+        console.log("Could be a connection error if apiKey is not set: " + apiKey)
       }
     })
 
-  })
+  }
 
   function clearDisplay() {
     document.getElementById("temperature").innerText = "";
@@ -126,7 +142,5 @@ window.onload = function () {
     }
   }
 
-  //myStorage = window.localStorage;
-  //localStorage.setItem('apiKey', 'e732348669ce5455d2c70577462ce33b');
-  //localStorage.removeItem('myCat')
+
 }
